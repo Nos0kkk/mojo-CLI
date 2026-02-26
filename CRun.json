@@ -1,0 +1,11 @@
+{
+  "setCompiler" : "g++",
+  "setFlags" : "-L$ORIGIN/libs -I$PREFIX/include -o",
+  "setFiles" : 
+  {
+    "setSrcFile" : "src/mojo.cpp",
+    "setExecFile" : "mojo"
+  },
+  "setLibs" : "-lc++_shared -lm -lc -ldl -ljsoncpp -lfmt -lncurses -lcpr -lcurl -lcrypto -lssl",
+  "autoStart" : false
+}
