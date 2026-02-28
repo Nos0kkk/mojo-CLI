@@ -372,10 +372,57 @@ int downinstances(int arg1, char* arg2[]) {
   return 0;
 }
 
-int versionlist() {
-  for (const auto& verslist : std::filesystem::directory_iterator("/storage/emulated/0/Android/data/git.artdeell.mojo/files/.minecraft/versions")) {
-    fmt::print(fmt::fg(fmt::color::yellow), verslist.path().filename().string());
-    std::cout << std::endl;
+int versionlist(int argcv, char* argvv[]) {
+  if (std::string(argvv[2]) == "--version" && argcv >= 3) {
+    for (const auto& listvers : std::filesystem::directory_iterator("/storage/emulated/0/Android/data/git.artdeell.mojo/files/.minecraft/versions")) {
+      fmt::print(fmt::fg(fmt::color::yellow), listvers.path().filename().string());
+      std::cout << std::endl;
+    }
+  } else if (std::string(argvv[2]) == "--mods" && argcv >= 3) {
+    std::vector<std::string> modlist;
+    int modlistid;
+    
+    for (const auto& perebmod : std::filesystem::directory_iterator("/storage/emulated/0/Android/data/git.artdeell.mojo/files/instances")) {
+      modlist.push_back(perebmod.path().filename().string());
+    }
+    
+    instances(modlist, modlistid);
+    
+    for (const auto& modlistperebor : std::filesystem::directory_iterator("/storage/emulated/0/Android/data/git.artdeell.mojo/files/instances/" + modlist[modlistid] + "/mods")) {
+      fmt::print(fmt::fg(fmt::color::yellow), modlistperebor.path().filename().string());
+      std::cout << std::endl;
+    }
+  } else if (std::string(argvv[2]) == "--instances" && argcv >= 3) {
+    for (const auto& listinst : std::filesystem::directory_iterator("/storage/emulated/0/Android/data/git.artdeell.mojo/files/instances")) {
+      fmt::print(fmt::fg(fmt::color::yellow), listinst.path().filename().string());
+      std::cout << std::endl;
+    }
+  } else if (std::string(argvv[2]) == "--rpack" && argcv >= 3) {
+    std::vector<std::string> rpackinst;
+    int rpackid;
+    
+    for (const auto& rppereb : std::filesystem::directory_iterator("/storage/emulated/0/Android/data/git.artdeell.mojo/files/instances")) {
+      rpackinst.push_back(rppereb.path().filename().string());
+    }
+    
+    instances(rpackinst, rpackid);
+    for (const auto& rpacklist : std::filesystem::directory_iterator("/storage/emulated/0/Android/data/git.artdeell.mojo/files/instances/" + rpackinst[rpackid] + "/resourcepacks")) {
+      fmt::print(fmt::fg(fmt::color::yellow), rpacklist.path().filename().string());
+      std::cout << std::endl;
+    }
+  } else if (std::string(argvv[2]) == "--world" && argcv >= 3) {
+    std::vector<std::string> worldinst;
+    int worldid;
+    
+    for (const auto& worldpereb : std::filesystem::directory_iterator("/storage/emulated/0/Android/data/git.artdeell.mojo/files/instances")) {
+      worldinst.push_back(worldpereb.path().filename().string());
+    }
+    
+    instances(worldinst, worldid);
+    for (const auto& worldlist : std::filesystem::directory_iterator("/storage/emulated/0/Android/data/git.artdeell.mojo/files/instances/" + worldinst[worldid] + "/saves")) {
+      fmt::print(fmt::fg(fmt::color::yellow), worldlist.path().filename().string());
+      std::cout << std::endl;
+    }
   }
   return 0;
 }
@@ -386,7 +433,12 @@ int help() {
   std::cout << "template: mojo [OPTION] [ARGUMENT]" << std::endl;
   std::cout << std::endl;
   
-  std::cout << "  mojo list    — list minecraft version" << std::endl;
+  std::cout << "  mojo list" << std::endl;
+  std::cout << "        |— --version — installed version" << std::endl;
+  std::cout << "        |— --mods — installed mods" << std::endl;
+  std::cout << "        |— --rpack — installed resourcepacks" << std::endl;
+  std::cout << "        |— --instances — list current versions" << std::endl;
+  std::cout << "        |_ --world — list installed world" << std::endl;
   std::cout << "  mojo --help    — help list" << std::endl;
   std::cout << "  mojo mods    — Mod manager" << std::endl;
   std::cout << R"(       |— --url "URL" — install mod to url(no mod manager))" << std::endl;
@@ -418,7 +470,7 @@ int main(int argc, char* argv[]) {
   } else if (std::string(argv[1]) == "create") {
     downinstances(argc, argv);
   } else if (std::string(argv[1]) == "list") {
-    versionlist();
+    versionlist(argc, argv);
   } else if (std::string(argv[1]) == "--help") {
     help();
   }
