@@ -115,6 +115,9 @@ int instances(std::vector<std::string> inst, int& signaled) {
 int mods(int argcM, char* argvM[]) {
   std::vector<std::string> modinst; 
   int id;
+  std::string modsearch;
+  std::string modlimit = "10";
+  int offset = 0; 
   if (argcM > 2 && std::string(argvM[2]) == "--url") {
     if (argcM > 3 && std::string(argvM[3]) != "") {
       std::string url_mod = std::string(argvM[3]);
@@ -133,6 +136,14 @@ int mods(int argcM, char* argvM[]) {
     return 0;
   }
   
+  for (int i = 1; i < argcM; i++) {
+    if (std::string(argvM[i]) == "--search" && i + 1 < argcM) {
+      modsearch = std::string(argvM[i + 1]);
+    } else if (std::string(argvM[i]) == "--limit" && i + 1 < argcM) {
+      modlimit = std::string(argvM[i + 1]);
+    }
+  }
+  
   for (const auto& perebor_instances : std::filesystem::directory_iterator("/storage/emulated/0/Android/data/git.artdeell.mojo/files/instances")) {
     modinst.push_back(perebor_instances.path().filename().string());
   }
@@ -144,18 +155,15 @@ int mods(int argcM, char* argvM[]) {
   ProgressBar bar("🌐 Connect to Modrinth...", 50);
   bar.update(1);
   
-  cpr::Response modlist = cpr::Get(cpr::Url{"https://api.modrinth.com/v2/search"}, cpr::Header{{"User-agent", "application/json"}, {"User-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36)"}, {"Accept", "application/json"}}, cpr::ProgressCallback([&bar](cpr::cpr_off_t downloadTotal, cpr::cpr_off_t downloadNow, 
+  cpr::Response modlist = cpr::Get(cpr::Url{"https://api.modrinth.com/v2/search"}, cpr::Parameters{{"query", modsearch},{"limit", modlimit},{"offset", std::to_string(offset)}}, cpr::Header{{"User-agent", "application/json"}, {"User-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36)"}, {"Accept", "application/json"}}, cpr::ProgressCallback([&bar](cpr::cpr_off_t downloadTotal, cpr::cpr_off_t downloadNow, 
   cpr::cpr_off_t uploadTotal, 
   cpr::cpr_off_t uploadNow, 
   intptr_t userdata) -> bool {
     if (downloadTotal > 0) {
       float progress = static_cast<float>(downloadNow) / downloadTotal;
       bar.update(progress);
-    }/* else {
-      static int spin = 0;
-      spin = (spin + 1) % 4;
-      std::cout << spin << std::endl;
-    } */
+    }
+    
     return true;
   }));
   
@@ -165,10 +173,6 @@ int mods(int argcM, char* argvM[]) {
   }
   
   bar.complete();
-  
-  std::cout << "Response length: " << modlist.text.length() << std::endl;
-  std::cout << "First 100 chars: " << modlist.text.substr(0, 100) << std::endl;
-  std::cout << std::endl;
   
   std::ofstream modjson_out("mods.json");
   modjson_out << modlist.text;
@@ -180,35 +184,109 @@ int mods(int argcM, char* argvM[]) {
   
   int mod_i = 0;
   for (const auto& title : modroot["hits"]) {
-    mod_i++;
     fmt::print(fmt::fg(fmt::color::yellow), std::to_string(mod_i));
     std::cout << ". 📦 " << title["title"].asString() << std::endl;
+    mod_i++;
   }
   
   fmt::print(fmt::fg(fmt::color::gray), "select mod: ");
-  std::string modname;
-  std::cin >> modname;
+  int modid;
+  std::cin >> modid;
   std::cout << std::endl;
   
+  std::cout << "📊 info mod" << std::endl;
+  std::cout << "📢 Name: ";
+  fmt::print(fmt::fg(fmt::color::yellow), modroot["hits"][modid]["title"].asString());
+  std::cout << std::endl;
   
+  std::cout << "🗣️ Author: ";
+  fmt::print(fmt::fg(fmt::color::yellow), modroot["hits"][modid]["author"].asString());
+  std::cout << std::endl;
+  
+  std::cout << "📝 Description: ";
+  fmt::print(fmt::fg(fmt::color::yellow), modroot["hits"][modid]["description"].asString());
+  std::cout << std::endl;
+  
+  std::cout << "📦 Categories: ";
+  for (const auto& loaderlist : modroot["hits"][modid]["display_categories"]) {
+    fmt::print(fmt::fg(fmt::color::yellow), loaderlist.asString());
+    std::cout << ", ";
+  }
+  std::cout << std::endl;
+  
+  std::cout << "🌐 Versions: ";
+  for (const auto& verslist : modroot["hits"][modid]["versions"]) {
+    fmt::print(fmt::fg(fmt::color::yellow), verslist.asString());
+    std::cout << ", ";
+  }
+  std::cout << std::endl;
+  
+  fmt::print(fmt::fg(fmt::color::gray), "version: ");
+  std::string modversion;
+  std::cin >> modversion;
+  std::cout << std::endl;
+  
+  fmt::print(fmt::fg(fmt::color::gray), "loader: ");
+  std::string modloader;
+  std::cin >> modloader;
+  std::cout << std::endl;
+  
+  std::cout << "⏳ Connect..." << std::endl;
+  
+  /* std::thread t([&](){
+    while (true) {
+      std::cout << "\r" << R"( \)" << std::flush;
+      std::this_thread::sleep_for(std::chrono::milliseconds(300));
+      std::cout << "\r |" << std::flush;
+      std::this_thread::sleep_for(std::chrono::milliseconds(300));
+      std::cout << "\r /" << std::flush;
+      std::this_thread::sleep_for(std::chrono::milliseconds(300));
+      std::cout << "\r —" << std::flush;
+      std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    }
+    std::cout << std::endl;
+  });
+  t.join(); */
+  
+  cpr::Response getlinkmod = cpr::Get(cpr::Url{"https://api.modrinth.com/v2/project/" + modroot["hits"][modid]["project_id"].asString() + "/version"},cpr::Parameters{{"game_versions", "[\"" + modversion + "\"]"},{"loaders", "[\"" + modloader + "\"]"}},cpr::Header{{"User-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36)"},{"Accept", "application/json"}});
+  
+  if (getlinkmod.status_code != 200) {
+    std::cout << "⚠️ error: code: " << getlinkmod.status_code << std::endl;
+    return 0;
+  }
+  
+  std::ofstream linkmodjson_out("get.json");
+  linkmodjson_out << getlinkmod.text;
+  linkmodjson_out.close();
+  
+  std::ifstream linkmodjson("get.json");
+  Json::Value linkmodj;
+  linkmodjson >> linkmodj;
+  
+  std::string modlink = "wget -P /storage/emulated/0/Android/data/git.artdeell.mojo/files/instances/" + modinst[id] + "/mods " + linkmodj[0]["files"][0]["url"].asString();
+  
+  system(modlink.c_str());
+  
+  std::filesystem::remove("mods.json");
+  std::filesystem::remove("get.json");
   
   return 0;
 }
 
 int status() {
   std::ifstream user("/storage/emulated/0/Android/data/git.artdeell.mojo/files/shader_dir/usercache.json");
+  
   Json::Value userj;
   user >> userj;
   
   std::cout << "📊 status:" << std::endl;
-  for (const auto& sj : userj) {
-    std::cout << "🗣️ Name: ";
-    fmt::print(fmt::fg(fmt::color::yellow), sj["name"].asString());
-    std::cout << std::endl;
-    
-    std::cout << "⏳ Date ";
-    fmt::print(fmt::fg(fmt::color::yellow), sj["expiresOn"].asString());
-  }
+  std::cout << "🗣️ Name: ";
+  fmt::print(fmt::fg(fmt::color::yellow), userj[0]["name"].asString());
+  std::cout << std::endl;
+  
+  std::cout << "⏳ Date: ";
+  fmt::print(fmt::fg(fmt::color::yellow), userj[0]["expiresOn"].asString());
+  std::cout << std::endl;
   return 0;
 }
 
@@ -311,7 +389,10 @@ int help() {
   std::cout << "  mojo list    — list minecraft version" << std::endl;
   std::cout << "  mojo --help    — help list" << std::endl;
   std::cout << "  mojo mods    — Mod manager" << std::endl;
-  std::cout << R"(       |_ --url "URL" — install mod to url)" << std::endl;
+  std::cout << R"(       |— --url "URL" — install mod to url(no mod manager))" << std::endl;
+  std::cout << R"(       |)" << std::endl;
+  std::cout << R"(       |— --search "MOD" — Mod search (mod manager))" << std::endl;
+  std::cout << R"(       |_ --limit — Mod Limit (mod manager))" << std::endl;
   std::cout << "  mojo create" << std::endl;
   std::cout << R"(          |— --instance "NAME" — Create an instance)" << std::endl;
   std::cout << R"(          |_ --v [VERSION] — Game version (after --insInstalling the mod at the linktance))" << std::endl;

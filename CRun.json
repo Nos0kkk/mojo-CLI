@@ -1,6 +1,6 @@
 {
   "setCompiler" : "g++",
-  "setFlags" : "-L$ORIGIN/libs -I$PREFIX/include -o",
+  "setFlags" : "-L$PREFIX/lib -I$PREFIX/include -o",
   "setFiles" : 
   {
     "setSrcFile" : "src/mojo.cpp",

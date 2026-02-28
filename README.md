@@ -23,3 +23,6 @@ After installation in the
 mojo --help
 ```
 This way you will see more information
+
+# !!!WARNING!!!
+```Some commands only work with root```, or android version 10

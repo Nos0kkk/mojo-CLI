@@ -1,5 +1,5 @@
 Package: mojo
-Version: 0.1
+Version: 0.8
 Architecture: aarch64
 Maintainer: Nos0kkk <nos0kdev@gmail.com>
 Description: simple CLI for MojoLauncher
